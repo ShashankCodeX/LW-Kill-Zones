@@ -1,0 +1,133 @@
+//@version=5
+// SPDX-License-Identifier: MIT
+indicator("Kill Zones [LW]", overlay=true, max_boxes_count=200)
+
+// ============================================================
+// INPUTS
+// ============================================================
+
+show_asia_kz   = input.bool(true, "Asia Kill Zone",         group="Kill Zones")
+show_london_kz = input.bool(true, "London Kill Zone",       group="Kill Zones")
+show_ny_kz     = input.bool(true, "NY Kill Zone",           group="Kill Zones")
+show_lclose_kz = input.bool(true, "London Close Kill Zone", group="Kill Zones")
+
+tz = input.string("America/New_York", "Timezone", group="Settings",
+     options=["America/New_York","Europe/London","Asia/Tokyo","UTC"])
+
+// ============================================================
+// COLORS
+// ============================================================
+
+c_asia   = #B8A800
+c_london = #5B7FA6
+c_ny     = #4A8A5A
+c_lclose = #A0622A
+
+// ============================================================
+// KILL ZONE DETECTION
+// Asia KZ        : 20:00 - 22:00
+// London KZ      : 02:00 - 05:00
+// NY KZ          : 07:00 - 10:00
+// London Close KZ: 10:00 - 12:00
+// ============================================================
+
+in_asia_kz   = show_asia_kz   and not na(time("1", "2000-2200", tz))
+in_london_kz = show_london_kz and not na(time("1", "0200-0500", tz))
+in_ny_kz     = show_ny_kz     and not na(time("1", "0700-1000", tz))
+in_lclose_kz = show_lclose_kz and not na(time("1", "1000-1200", tz))
+
+// ============================================================
+// BOX DRAWING
+// ============================================================
+
+var box b_asia_kz   = na
+var box b_london_kz = na
+var box b_ny_kz     = na
+var box b_lclose_kz = na
+
+// — Asia KZ
+if in_asia_kz and not in_asia_kz[1]
+    b_asia_kz := box.new(bar_index, high, bar_index, low,
+         border_color=color.new(c_asia, 20),
+         border_width=1,
+         bgcolor=color.new(c_asia, 85),
+         text="Asia KZ",
+         text_color=color.new(c_asia, 10),
+         text_size=size.tiny,
+         text_halign=text.align_left,
+         text_valign=text.align_top)
+if in_asia_kz
+    box.set_right(b_asia_kz, bar_index)
+    box.set_top(b_asia_kz,    math.max(box.get_top(b_asia_kz),    high))
+    box.set_bottom(b_asia_kz, math.min(box.get_bottom(b_asia_kz), low))
+
+// — London KZ
+if in_london_kz and not in_london_kz[1]
+    b_london_kz := box.new(bar_index, high, bar_index, low,
+         border_color=color.new(c_london, 20),
+         border_width=1,
+         bgcolor=color.new(c_london, 85),
+         text="London KZ",
+         text_color=color.new(c_london, 10),
+         text_size=size.tiny,
+         text_halign=text.align_left,
+         text_valign=text.align_top)
+if in_london_kz
+    box.set_right(b_london_kz, bar_index)
+    box.set_top(b_london_kz,    math.max(box.get_top(b_london_kz),    high))
+    box.set_bottom(b_london_kz, math.min(box.get_bottom(b_london_kz), low))
+
+// — NY KZ
+if in_ny_kz and not in_ny_kz[1]
+    b_ny_kz := box.new(bar_index, high, bar_index, low,
+         border_color=color.new(c_ny, 20),
+         border_width=1,
+         bgcolor=color.new(c_ny, 85),
+         text="NY KZ",
+         text_color=color.new(c_ny, 10),
+         text_size=size.tiny,
+         text_halign=text.align_left,
+         text_valign=text.align_top)
+if in_ny_kz
+    box.set_right(b_ny_kz, bar_index)
+    box.set_top(b_ny_kz,    math.max(box.get_top(b_ny_kz),    high))
+    box.set_bottom(b_ny_kz, math.min(box.get_bottom(b_ny_kz), low))
+
+// — London Close KZ
+if in_lclose_kz and not in_lclose_kz[1]
+    b_lclose_kz := box.new(bar_index, high, bar_index, low,
+         border_color=color.new(c_lclose, 20),
+         border_width=1,
+         bgcolor=color.new(c_lclose, 85),
+         text="London Close KZ",
+         text_color=color.new(c_lclose, 10),
+         text_size=size.tiny,
+         text_halign=text.align_left,
+         text_valign=text.align_top)
+if in_lclose_kz
+    box.set_right(b_lclose_kz, bar_index)
+    box.set_top(b_lclose_kz,    math.max(box.get_top(b_lclose_kz),    high))
+    box.set_bottom(b_lclose_kz, math.min(box.get_bottom(b_lclose_kz), low))
+
+// ============================================================
+// INFO TABLE
+// ============================================================
+
+var table t = table.new(position.top_right, 2, 6,
+     bgcolor=color.new(color.black, 85),
+     border_color=color.new(color.white, 80),
+     border_width=1)
+
+if barstate.islast
+    table.cell(t, 0, 0, "KILL ZONE",        text_color=color.new(color.white,40), text_size=size.tiny, bgcolor=color.new(color.gray,85))
+    table.cell(t, 1, 0, "Session Time",        text_color=color.new(color.white,40), text_size=size.tiny, bgcolor=color.new(color.gray,85))
+    table.cell(t, 0, 1, "Asia KZ",          text_color=color.new(c_asia,10),      text_size=size.tiny)
+    table.cell(t, 1, 1, "8PM - 10PM",       text_color=color.new(c_asia,10),      text_size=size.tiny)
+    table.cell(t, 0, 2, "London KZ",        text_color=color.new(c_london,10),    text_size=size.tiny)
+    table.cell(t, 1, 2, "2AM - 5AM",        text_color=color.new(c_london,10),    text_size=size.tiny)
+    table.cell(t, 0, 3, "NY KZ",            text_color=color.new(c_ny,10),        text_size=size.tiny)
+    table.cell(t, 1, 3, "7AM - 10AM",       text_color=color.new(c_ny,10),        text_size=size.tiny)
+    table.cell(t, 0, 4, "London Close KZ",  text_color=color.new(c_lclose,10),    text_size=size.tiny)
+    table.cell(t, 1, 4, "10AM - 12PM",      text_color=color.new(c_lclose,10),    text_size=size.tiny)
+    table.cell(t, 0, 5, "Timezone",         text_color=color.new(color.white,50), text_size=size.tiny, bgcolor=color.new(color.gray,88))
+    table.cell(t, 1, 5, tz,   text_color=color.new(color.white,50), text_size=size.tiny, bgcolor=color.new(color.gray,88))
